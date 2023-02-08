@@ -1,0 +1,1 @@
+goaccess -f ../05/access.log --log-format='%h %s %m [%d:%t] "%U" "%u"' -o index.html --date-format=%d/%m/%Y --time-format='%H:%M:%S'

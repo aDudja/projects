@@ -1,0 +1,399 @@
+#include "s21_matrix.h"
+
+// === 1. s21_MATRIX_CREATE TESTS ===
+
+#test s21_matrix_create_test_1
+matrix_t test;
+s21_create_matrix(15, 10, &test);
+ck_assert_int_eq(test.columns, 10);
+ck_assert_int_eq(test.rows, 15);
+s21_remove_matrix(&test);
+
+#test s21_matrix_create_test_3
+matrix_t test;
+s21_create_matrix(1, 20, &test);
+ck_assert_int_eq(test.rows, 1);
+ck_assert_int_eq(test.columns, 20);
+s21_remove_matrix(&test);
+
+#test s21_matrix_create_test_4
+matrix_t A;
+int code = s21_create_matrix(1,-1,&A);
+ck_assert_int_eq(code, 1);
+if (!code) s21_remove_matrix(&A);
+
+// === 2. s21_MATRIX_REMOVE TESTS ===
+
+#test s21_matrix_remove_test_1
+matrix_t test;
+s21_create_matrix(15, 10, &test);
+ck_assert_int_eq(test.columns, 10);
+ck_assert_int_eq(test.rows, 15);
+s21_remove_matrix(&test);
+
+// === 3. s21_EQ_MATRIX TESTS ===
+
+#test s21_eq_matrix_test_1
+matrix_t A, B;
+s21_create_matrix(15, 10, &A);
+s21_create_matrix(10, 15, &B);
+ck_assert_int_eq(s21_eq_matrix(&A, &B), FAILURE);
+s21_remove_matrix(&A);
+s21_remove_matrix(&B);
+
+#test s21_eq_matrix_test_2
+matrix_t A, B;
+s21_create_matrix(3, 3, &A);
+s21_create_matrix(3, 3, &B);
+matrix_fill(&A, 1234567.1234567);
+matrix_fill(&B, 1234567.1234567);
+ck_assert_int_eq(s21_eq_matrix(&A, &B), SUCCESS);
+s21_remove_matrix(&A);
+s21_remove_matrix(&B);
+
+#test s21_eq_matrix_test_3
+matrix_t A, B;
+s21_create_matrix(3, 3, &A);
+s21_create_matrix(3, 3, &B);
+matrix_fill(&A, 1234567.12345678);
+matrix_fill(&B, 1234567.1234567);
+ck_assert_int_eq(s21_eq_matrix(&A, &B), SUCCESS);
+s21_remove_matrix(&A);
+s21_remove_matrix(&B);
+
+#test s21_eq_matrix_test_4
+matrix_t A, B;
+s21_create_matrix(3, 3, &A);
+s21_create_matrix(3, 3, &B);
+matrix_fill(&A, 123456789.123456789);
+matrix_fill(&B, 123456789.12345678);
+ck_assert_int_eq(s21_eq_matrix(&A, &B), SUCCESS);
+s21_remove_matrix(&A);
+s21_remove_matrix(&B);
+
+#test s21_eq_matrix_test_5
+matrix_t A, B;
+s21_create_matrix(3, 3, &A);
+s21_create_matrix(3, 3, &B);
+matrix_fill(&A, 1.7976931348623157E+308);
+matrix_fill(&B, 1.7976931348623157E+307);
+ck_assert_int_eq(s21_eq_matrix(&A, &B), FAILURE);
+s21_remove_matrix(&A);
+s21_remove_matrix(&B);
+
+#test s21_eq_matrix_test_6
+matrix_t A, B;
+s21_create_matrix(3, 3, &A);
+s21_create_matrix(3, 3, &B);
+matrix_fill(&A, -1.7976931348623157E+308);
+matrix_fill(&B, -1.7976931348623157E+300);
+ck_assert_int_eq(s21_eq_matrix(&A, &B), FAILURE);
+s21_remove_matrix(&A);
+s21_remove_matrix(&B);
+
+#test s21_eq_matrix_test_8
+matrix_t A, B;
+s21_create_matrix(3, 3, &A);
+s21_create_matrix(3, 3, &B);
+matrix_fill(&A, 1.1111111);
+matrix_fill(&B, 1.11111112);
+ck_assert_int_eq(s21_eq_matrix(&A, &B), SUCCESS);
+s21_remove_matrix(&A);
+s21_remove_matrix(&B);
+
+#test s21_eq_matrix_test_9
+matrix_t A, B;
+s21_create_matrix(3, 3, &A);
+s21_create_matrix(3, 3, &B);
+matrix_fill(&A, 1.1111111);
+matrix_fill(&B, 1.1111112);
+ck_assert_int_eq(s21_eq_matrix(&A, &B), FAILURE);
+s21_remove_matrix(&A);
+s21_remove_matrix(&B);
+
+// === 4. s21_SUM_MATRIX TESTS ===
+
+#test s21_sum_matrix_test_1
+matrix_t A, B, result;
+s21_create_matrix(3, 3, &A);
+s21_create_matrix(3, 3, &B);
+matrix_fill(&A, 1.2222222);
+matrix_fill(&B, 5.4444444);
+ck_assert_int_eq(s21_sum_matrix(&A, &B, &result), 0);
+s21_remove_matrix(&A);
+s21_remove_matrix(&B);
+s21_remove_matrix(&result);
+
+#test s21_sum_matrix_test_2
+matrix_t A, B, C, result;
+s21_create_matrix(3, 3, &A);
+s21_create_matrix(3, 3, &B);
+s21_create_matrix(3, 3, &C);
+matrix_fill(&A, 1.2222222);
+matrix_fill(&B, 5.4444444);
+matrix_fill(&C, 6.6666666);
+s21_sum_matrix(&A, &B, &result);
+for (int i = 0; i < result.rows; i++) {
+    for (int j = 0; j < result.columns; j++) {
+        ck_assert_double_eq(*(*(result.matrix+i)+j), *(*(C.matrix+i)+j));
+    }
+}
+s21_remove_matrix(&A);
+s21_remove_matrix(&B);
+s21_remove_matrix(&C);
+s21_remove_matrix(&result);
+
+#test s21_sum_matrix_test_3
+matrix_t A, B, C, result;
+s21_create_matrix(5, 10, &A);
+s21_create_matrix(5, 10, &B);
+s21_create_matrix(5, 10, &C);
+matrix_fill(&A, 1.2222222);
+matrix_fill(&B, 5.4444444);
+matrix_fill(&C, 6.6666666);
+s21_sum_matrix(&A, &B, &result);
+for (int i = 0; i < result.rows; i++) {
+    for (int j = 0; j < result.columns; j++) {
+        ck_assert_double_eq(*(*(result.matrix+i)+j), *(*(C.matrix+i)+j));
+    }
+}
+s21_remove_matrix(&A);
+s21_remove_matrix(&B);
+s21_remove_matrix(&C);
+s21_remove_matrix(&result);
+
+#test s21_sum_matrix_test_4
+matrix_t A, B, result;
+s21_create_matrix(5, 10, &A);
+s21_create_matrix(10, 5, &B);
+matrix_fill(&A, 1.2222222);
+matrix_fill(&B, 5.4444444);
+int code = s21_sum_matrix(&A, &B, &result);
+ck_assert_double_eq(code, 2);
+s21_remove_matrix(&A);
+s21_remove_matrix(&B);
+if (!code) s21_remove_matrix(&result);
+
+// === 5. s21_SUB_MATRIX TESTS ===
+
+#test s21_sub_matrix_test_1
+matrix_t A, B, result;
+s21_create_matrix(3, 3, &A);
+s21_create_matrix(3, 3, &B);
+matrix_fill(&B, 1.2222222);
+matrix_fill(&A, 5.4444444);
+ck_assert_int_eq(s21_sub_matrix(&A, &B, &result), 0);
+s21_remove_matrix(&A);
+s21_remove_matrix(&B);
+s21_remove_matrix(&result);
+
+#test s21_sub_matrix_test_2
+matrix_t A, B, C, result;
+s21_create_matrix(3, 3, &A);
+s21_create_matrix(3, 3, &B);
+s21_create_matrix(3, 3, &C);
+matrix_fill(&A, 6.6666666);
+matrix_fill(&B, 1.2222222);
+matrix_fill(&C, 5.4444444);
+s21_sub_matrix(&A, &B, &result);
+for (int i = 0; i < result.rows; i++) {
+    for (int j = 0; j < result.columns; j++) {
+        ck_assert_double_eq(*(*(result.matrix+i)+j), *(*(C.matrix+i)+j));
+    }
+}
+s21_remove_matrix(&A);
+s21_remove_matrix(&B);
+s21_remove_matrix(&C);
+s21_remove_matrix(&result);
+
+// === 6. s21_MULT_NUMBER_MATRIX TESTS ===
+
+#test s21_mult_number_matrix_test_1
+matrix_t A, B, result;
+s21_create_matrix(3, 9, &A);
+s21_create_matrix(3, 9, &B);
+matrix_fill(&A, 1.1111111);
+matrix_fill(&B, 2.2222222);
+s21_mult_number(&A, 2, &result);
+for (int i = 0; i < result.rows; i++) {
+    for (int j = 0; j < result.columns; j++) {
+        ck_assert_double_eq(*(*(result.matrix+i)+j), *(*(B.matrix+i)+j));
+    }
+}
+s21_remove_matrix(&A);
+s21_remove_matrix(&B);
+s21_remove_matrix(&result);
+
+#test s21_mult_number_matrix_test_2
+matrix_t A, result;
+s21_create_matrix(5, 10, &A);
+A.columns = 0;
+matrix_fill(&A, 1.2222222);
+int code = s21_mult_number(&A, 2, &result);
+ck_assert_double_eq(code, 1);
+s21_remove_matrix(&A);
+if (!code) s21_remove_matrix(&result);
+
+// === 6. s21_MULT_MATRIX TESTS ===
+
+#test s21_mult_matrix_test_1
+matrix_t A, B, C, result;
+s21_create_matrix(2, 3, &A);
+s21_create_matrix(3, 2, &B);
+s21_create_matrix(3, 3, &C);
+matrix_fill(&A, 1.0000000);
+matrix_fill(&B, 2.0000000);
+matrix_fill(&C, 6.0000000);
+s21_mult_matrix(&A, &B, &result);
+for (int i = 0; i < result.rows; i++) {
+    for (int j = 0; j < result.columns; j++) {
+        ck_assert_double_eq(*(*(result.matrix+i)+j), *(*(C.matrix+i)+j));
+    }
+}
+s21_remove_matrix(&A);
+s21_remove_matrix(&B);
+s21_remove_matrix(&C);
+s21_remove_matrix(&result);
+
+#test s21_mult_matrix_test_2
+matrix_t A, B, result;
+s21_create_matrix(2, 4, &A);
+s21_create_matrix(5, 7, &B);
+matrix_fill(&A, 1.0000000);
+matrix_fill(&B, 2.0000000);
+int code = s21_mult_matrix(&A, &B, &result);
+ck_assert_int_eq(code, 2);
+s21_remove_matrix(&A);
+s21_remove_matrix(&B);
+if (!code) s21_remove_matrix(&result);
+
+// === 6. s21_TRANSPOSE_MATRIX TESTS ===
+
+#test s21_transpose_matrix_test_1
+matrix_t A, B, result;
+s21_create_matrix(2, 3, &A);
+s21_create_matrix(3, 2, &B);
+matrix_fill(&A, 2.0000000);
+matrix_fill(&B, 2.0000000);
+s21_transpose(&A, &result);
+for (int i = 0; i < result.rows; i++) {
+    for (int j = 0; j < result.columns; j++) {
+        ck_assert_double_eq(*(*(result.matrix+i)+j), *(*(B.matrix+i)+j));
+    }
+}
+s21_remove_matrix(&A);
+s21_remove_matrix(&B);
+s21_remove_matrix(&result);
+
+// === 7. s21_CALC_COMPLEMENTS ===
+
+#test s21_calc_complements_test_1
+matrix_t A, B, result;
+s21_create_matrix(3, 3, &A);
+s21_create_matrix(3, 3, &B);
+A.matrix[0][0] = 1;
+A.matrix[0][1] = 2;
+A.matrix[0][2] = 3;
+A.matrix[1][0] = 0;
+A.matrix[1][1] = 4;
+A.matrix[1][2] = 2;
+A.matrix[2][0] = 5;
+A.matrix[2][1] = 2;
+A.matrix[2][2] = 1;
+B.matrix[0][0] = 0;
+B.matrix[0][1] = 10;
+B.matrix[0][2] = -20;
+B.matrix[1][0] = 4;
+B.matrix[1][1] = -14;
+B.matrix[1][2] = 8;
+B.matrix[2][0] = -8;
+B.matrix[2][1] = -2;
+B.matrix[2][2] = 4;
+s21_calc_complements(&A, &result);
+for (int i = 0; i < result.rows; i++) {
+    for (int j = 0; j < result.columns; j++) {
+        ck_assert_double_eq(*(*(result.matrix+i)+j), *(*(B.matrix+i)+j));
+    }
+}
+s21_remove_matrix(&A);
+s21_remove_matrix(&B);
+s21_remove_matrix(&result);
+
+// === 8. s21_DETERMINANT ===
+
+#test s21_determinant_matrix_test_1
+matrix_t A; 
+double result;
+s21_create_matrix(1, 1, &A);
+A.matrix[0][0] = 21;
+s21_determinant(&A, &result);
+ck_assert_double_eq(result, 21);
+s21_remove_matrix(&A);
+
+#test s21_determinant_matrix_test_3
+matrix_t A; 
+double result;
+s21_create_matrix(2, 2, &A);
+A.matrix[0][0] = 1;
+A.matrix[0][1] = 2;
+A.matrix[1][0] = 3;
+A.matrix[1][1] = 4;
+s21_determinant(&A, &result);
+ck_assert_double_eq(result, -2);
+s21_remove_matrix(&A);
+
+#test s21_determinant_matrix_test_4
+matrix_t A;
+double result = 0;
+s21_create_matrix(3, 3, &A);
+A.matrix[0][0] = 1;
+A.matrix[0][1] = 2;
+A.matrix[0][2] = 3;
+A.matrix[1][0] = 4;
+A.matrix[1][1] = 5;
+A.matrix[1][2] = 6;
+A.matrix[2][0] = 7;
+A.matrix[2][1] = 8;
+A.matrix[2][2] = 9;
+s21_determinant(&A, &result);
+ck_assert_double_eq(result, 0);
+s21_remove_matrix(&A);
+
+// === 9. S21_INVERSE_MATRIX ===
+
+#test s21_inverse_matrix_test_1
+matrix_t A, B, result;
+s21_create_matrix(3, 3, &A);
+s21_create_matrix(3, 3, &B);
+A.matrix[0][0] = 2;
+A.matrix[0][1] = 5;
+A.matrix[0][2] = 7;
+A.matrix[1][0] = 6;
+A.matrix[1][1] = 3;
+A.matrix[1][2] = 4;
+A.matrix[2][0] = 5;
+A.matrix[2][1] = -2;
+A.matrix[2][2] = -3;
+B.matrix[0][0] = 1;
+B.matrix[0][1] = -1;
+B.matrix[0][2] = 1;
+B.matrix[1][0] = -38;
+B.matrix[1][1] = 41;
+B.matrix[1][2] = -34;
+B.matrix[2][0] = 27;
+B.matrix[2][1] = -29;
+B.matrix[2][2] = 24;
+s21_inverse_matrix(&A, &result);
+for (int i = 0; i < result.rows; i++) {
+    for (int j = 0; j < result.columns; j++) {
+        ck_assert_double_eq(*(*(result.matrix+i)+j), *(*(B.matrix+i)+j));
+    }
+}
+s21_remove_matrix(&A);
+s21_remove_matrix(&B);
+s21_remove_matrix(&result);
+
+#test s21_inverse_matrix_test_2
+matrix_t result;
+int code = s21_inverse_matrix(NULL, &result);
+ck_assert_int_eq(code, 1);
